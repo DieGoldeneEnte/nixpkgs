@@ -14,6 +14,11 @@ for flag in @hardening_unsupported_flags@; do
   unset -v "hardeningEnableMap[$flag]"
 done
 
+# Remove unsupported flags set in the wrapper script
+for flag in "${wrapper_unsupported_hardening_flags[@]}"; do
+  unset -v "hardeningEnableMap[$flag]"
+done
+
 if (( "${NIX_DEBUG:-0}" >= 1 )); then
   declare -a allHardeningFlags=(fortify stackprotector pie pic strictoverflow format)
   declare -A hardeningDisableMap=()

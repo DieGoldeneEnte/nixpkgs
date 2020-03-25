@@ -37,6 +37,9 @@ cc1=0
 # shellcheck disable=SC2193
 [[ "@prog@" = *++ ]] && isCpp=1 || isCpp=0
 cppInclude=1
+isCuda=0
+
+declare -a wrapper_unsupported_hardening_flags=()
 
 expandResponseParams "$@"
 declare -i n=0
@@ -60,6 +63,8 @@ while (( "$n" < "$nParams" )); do
         dontLink=1
     elif [[ "$p" = -x && "$p2" = c++* && "$isCpp" = 0 ]]; then
         isCpp=1
+    elif [[ "$p" = -x && "$p2" = cuda ]]; then
+        isCuda=1
     elif [ "$p" = -nostdlib ]; then
         isCpp=-1
     elif [ "$p" = -nostdinc ]; then
@@ -132,6 +137,11 @@ if [[ "$isCpp" = 1 ]]; then
         NIX_@infixSalt@_CFLAGS_COMPILE+=" ${NIX_@infixSalt@_CXXSTDLIB_COMPILE:-@default_cxx_stdlib_compile@}"
     fi
     NIX_@infixSalt@_CFLAGS_LINK+=" $NIX_@infixSalt@_CXXSTDLIB_LINK"
+fi
+
+if [[ "$isCuda" = 1 ]]; then
+    # CUDA doesn't work with fortify
+    wrapper_unsupported_hardening_flags+=("fortify")
 fi
 
 source @out@/nix-support/add-hardening.sh
